@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>TranspoBot - Maquettes Mobile</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb; --primary-glow: rgba(37,99,235,0.3);
+            --secondary: #8b5cf6; --success: #10b981;
+            --danger: #ef4444; --warning: #f59e0b;
+            --bg-base: #f1f5f9; --bg-panel: #ffffff;
+            --text-main: #1e293b; --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: #94a3b8; }
+
+        /* ===== A4 PAGE ===== */
+        .a4-page {
+            width: 210mm; min-height: 297mm; height: 297mm;
+            margin: 8mm auto; background: #1e293b;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            position: relative; box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+            page-break-after: always; overflow: hidden;
+        }
+        .a4-page::before {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(ellipse at top left, rgba(37,99,235,0.15), transparent 60%), 
+                        radial-gradient(ellipse at bottom right, rgba(139,92,246,0.12), transparent 60%);
+        }
+        .page-label {
+            position: absolute; top: 12mm; left: 0; right: 0;
+            text-align: center; font-size: 10px; color: rgba(255,255,255,0.35);
+            letter-spacing: 2px; text-transform: uppercase; z-index: 10;
+        }
+        .page-num {
+            position: absolute; bottom: 10mm; right: 15mm;
+            font-size: 9px; color: rgba(255,255,255,0.25); z-index: 10;
+        }
+
+        /* ===== PHONE FRAME ===== */
+        .phone-frame {
+            width: 390px; height: 844px;
+            background: #000; border-radius: 54px;
+            padding: 12px; position: relative; z-index: 5;
+            box-shadow: 0 0 0 1px #333, 0 0 0 3px #1a1a1a, 0 30px 80px rgba(0,0,0,0.7), inset 0 0 0 1px #444;
+            transform: scale(0.84);
+        }
+        .phone-screen {
+            width: 100%; height: 100%;
+            border-radius: 44px; overflow: hidden;
+            background: var(--bg-base); position: relative;
+        }
+        .phone-notch {
+            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            width: 126px; height: 34px; background: #000;
+            border-radius: 0 0 20px 20px; z-index: 30;
+        }
+        .status-bar {
+            height: 44px; background: var(--bg-panel); display: flex;
+            align-items: flex-end; justify-content: space-between;
+            padding: 0 28px 8px; font-size: 11px; font-weight: 600;
+            color: var(--text-main); position: relative; z-index: 20;
+        }
+        .status-bar .icons { display: flex; gap: 5px; align-items: center; }
+
+        /* ===== SCREEN CONTENT STYLES (shared) ===== */
+        .screen { width: 100%; height: calc(100% - 44px); overflow: hidden; display: flex; flex-direction: column; }
+        .bottom-bar {
+            height: 72px; background: white; border-top: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-around;
+            padding: 8px 0; flex-shrink: 0;
+        }
+        .bottom-bar a { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 9.5px; color: var(--text-muted); text-decoration: none; }
+        .bottom-bar a.active { color: var(--primary); }
+        .bottom-bar a i { font-size: 18px; }
+        .scrollable { flex: 1; overflow-y: auto; }
+
+        /* ===== SCREEN 1: LOGIN ===== */
+        .s-login {
+            background: url('https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=800&auto=format&fit=crop') center/cover;
+            height: 100%; display: flex; align-items: center; justify-content: center;
+        }
+        .login-glass {
+            background: rgba(255,255,255,0.12); backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.25); border-radius: 24px;
+            padding: 32px 28px; width: 310px; text-align: center;
+        }
+        .login-glass .logo-icon { font-size: 2rem; color: #3b82f6; margin-bottom: 8px; }
+        .login-glass h2 { font-size: 22px; font-weight: 700; color: white; margin-bottom: 4px; }
+        .login-glass p { font-size: 11px; color: rgba(255,255,255,0.6); margin-bottom: 24px; }
+        .field-grp { text-align: left; margin-bottom: 14px; }
+        .field-grp label { font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.6); display: block; margin-bottom: 5px; }
+        .field-grp .inp { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 11px 14px; font-size: 12px; color: white; width: 100%; }
+        .btn-login { background: #2563eb; color: white; border: none; border-radius: 10px; padding: 12px; width: 100%; font-size: 13px; font-weight: 600; margin-top: 6px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+
+        /* ===== SCREEN 2: DASHBOARD ===== */
+        .s-dash { background: var(--bg-base); }
+        .topbar { background: white; padding: 14px 18px 10px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        .topbar h1 { font-size: 16px; font-weight: 700; }
+        .topbar h1 span { color: var(--primary); }
+        .avatar-sm { width: 34px; height: 34px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 700; }
+        .dash-content { padding: 14px 14px 0; }
+        .kpi-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+        .kpi-card { background: white; border-radius: 12px; padding: 12px; border-left: 3px solid var(--primary); box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+        .kpi-card .kpi-label { font-size: 9.5px; color: var(--text-muted); font-weight: 500; margin-bottom: 4px; }
+        .kpi-card .kpi-val { font-size: 16px; font-weight: 700; color: var(--text-main); }
+        .kpi-card .kpi-sub { font-size: 8.5px; color: var(--success); }
+        .section-title { font-size: 11px; font-weight: 700; color: var(--text-main); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .chatbot-box { background: white; border-radius: 12px; padding: 12px; border: 1px solid rgba(139,92,246,0.25); box-shadow: 0 2px 12px rgba(139,92,246,0.1); }
+        .chatbot-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+        .chatbot-header .bot-icon { width: 28px; height: 28px; background: linear-gradient(135deg, var(--secondary), #6d28d9); border-radius: 8px; display:flex; align-items:center; justify-content:center; color:white; font-size:13px; }
+        .chatbot-header span { font-size: 11px; font-weight: 700; color: var(--secondary); }
+        .chatbot-header small { font-size: 9px; color: var(--success); display: block; }
+        .bubble { padding: 8px 11px; border-radius: 12px; font-size: 10px; line-height: 1.4; margin-bottom: 6px; max-width: 90%; }
+        .bubble.user { background: var(--primary); color: white; border-radius: 12px 12px 2px 12px; align-self: flex-end; margin-left: auto; }
+        .bubble.bot { background: #f1f5f9; color: var(--text-main); border-radius: 12px 12px 12px 2px; }
+        .bubble code { font-size: 9px; color: var(--success); background: rgba(0,0,0,0.06); padding: 2px 4px; border-radius: 4px; }
+        .chat-input-row { display: flex; gap: 6px; margin-top: 8px; }
+        .chat-input-row input { flex: 1; background: #f1f5f9; border: 1px solid var(--border); border-radius: 20px; padding: 8px 12px; font-size: 10px; color: var(--text-main); }
+        .chat-input-row button { background: var(--secondary); border: none; border-radius: 50%; width: 32px; height: 32px; color: white; font-size: 11px; }
+
+        /* ===== SCREEN 3: CHAUFFEURS ===== */
+        .s-staff { background: var(--bg-base); }
+        .view-header { background: white; padding: 14px 16px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        .view-header h2 { font-size: 15px; font-weight: 700; }
+        .btn-add { background: var(--primary); color: white; border: none; border-radius: 8px; padding: 7px 12px; font-size: 10px; font-weight: 600; display: flex; align-items: center; gap: 5px; }
+        .staff-list { padding: 12px 12px 0; display: flex; flex-direction: column; gap: 10px; }
+        .staff-card { background: white; border-radius: 14px; padding: 14px; display: flex; align-items: center; gap: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+        .staff-avatar { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: white; flex-shrink: 0; }
+        .staff-info { flex: 1; }
+        .staff-info .name { font-size: 12px; font-weight: 700; color: var(--text-main); }
+        .staff-info .permis { font-size: 9.5px; color: var(--text-muted); }
+        .badge { display: inline-flex; align-items: center; gap: 3px; padding: 3px 8px; border-radius: 20px; font-size: 9px; font-weight: 600; }
+        .badge.success { background: rgba(16,185,129,0.12); color: var(--success); }
+        .badge.danger { background: rgba(239,68,68,0.12); color: var(--danger); }
+        .badge.warning { background: rgba(245,158,11,0.12); color: var(--warning); }
+        .badge.info { background: rgba(37,99,235,0.12); color: var(--primary); }
+        .staff-actions { display: flex; gap: 6px; }
+        .icon-btn { width: 30px; height: 30px; border: 1px solid var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 11px; }
+
+        /* ===== SCREEN 4: FLOTTE ===== */
+        .fleet-list { padding: 12px 12px 0; display: flex; flex-direction: column; gap: 10px; }
+        .fleet-card { background: white; border-radius: 14px; padding: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+        .fleet-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+        .fleet-name { font-size: 13px; font-weight: 700; }
+        .fleet-plate { font-size: 10px; color: var(--text-muted); }
+        .km-bar { height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; margin: 6px 0; }
+        .km-bar-fill { height: 100%; border-radius: 3px; }
+        .km-labels { display: flex; justify-content: space-between; font-size: 8.5px; color: var(--text-muted); }
+
+        /* ===== SCREEN 5: LIGNES/GPS ===== */
+        .s-lignes { background: var(--bg-base); }
+        .map-container { background: #e8f4f8; position: relative; height: 220px; overflow: hidden; }
+        .map-bg { position: absolute; inset: 0; background: url('https://a.tile.openstreetmap.org/10/490/470.png') center/cover; opacity: 0.7; }
+        .map-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 60%, rgba(241,245,249,0.9)); }
+        .map-pin { position: absolute; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; color: white; box-shadow: 0 3px 8px rgba(0,0,0,0.35); }
+        .map-pin.A { background: var(--success); top: 70px; left: 80px; }
+        .map-pin.B { background: var(--danger); top: 150px; right: 90px; }
+        .map-route { position: absolute; width: 130px; height: 3px; background: var(--secondary); border-radius: 3px; top: 115px; left: 95px; transform: rotate(20deg); }
+        .ligne-form { padding: 12px 14px 0; }
+        .fld { margin-bottom: 10px; }
+        .fld label { font-size: 9.5px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px; }
+        .fld .val { background: white; border: 1px solid var(--border); border-radius: 9px; padding: 9px 12px; font-size: 11px; color: var(--text-main); display: flex; align-items: center; justify-content: space-between; }
+        .fld .val .auto-badge { font-size: 8px; color: var(--success); font-weight: 600; background: rgba(16,185,129,0.1); padding: 2px 6px; border-radius: 10px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+        /* ===== SCREEN 6: TRAJETS ===== */
+        .trajets-list { padding: 12px 12px 0; display: flex; flex-direction: column; gap: 10px; }
+        .trajet-card { background: white; border-radius: 14px; padding: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+        .trajet-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+        .trajet-number { font-size: 12px; font-weight: 700; }
+        .trajet-route { font-size: 10px; color: var(--text-muted); margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
+        .trajet-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+        .trajet-meta span { font-size: 9px; display: flex; align-items: center; gap: 3px; color: var(--text-muted); }
+        .action-row { display: flex; gap: 6px; }
+        .action-btn { flex: 1; padding: 7px; border-radius: 8px; border: none; font-size: 9.5px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 4px; }
+        .action-btn.start { background: rgba(16,185,129,0.12); color: var(--success); }
+        .action-btn.edit { background: rgba(37,99,235,0.1); color: var(--primary); }
+        .action-btn.stop { background: rgba(239,68,68,0.1); color: var(--danger); }
+
+        /* ===== SCREEN 7: INCIDENTS ===== */
+        .incidents-list { padding: 12px 12px 0; display: flex; flex-direction: column; gap: 10px; }
+        .incident-card { background: white; border-radius: 14px; padding: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border-left: 4px solid var(--danger); }
+        .incident-card.resolved { border-left-color: var(--success); }
+        .inc-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+        .inc-type { font-size: 12px; font-weight: 700; color: var(--danger); }
+        .incident-card.resolved .inc-type { color: var(--success); }
+        .inc-desc { font-size: 10px; color: var(--text-muted); margin-bottom: 8px; line-height: 1.4; }
+        .inc-meta { font-size: 9px; color: var(--text-muted); display: flex; gap: 10px; }
+
+        /* ===== SCREEN 8: MAINTENANCES ===== */
+        .maint-list { padding: 12px 12px 0; display: flex; flex-direction: column; gap: 10px; }
+        .maint-card { background: white; border-radius: 14px; padding: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+        .maint-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+        .maint-title { font-size: 12px; font-weight: 700; }
+        .maint-sub { font-size: 9.5px; color: var(--text-muted); margin-bottom: 8px; }
+        .maint-actions { display: flex; gap: 6px; margin-top: 6px; }
+
+        /* ===== PRINT ===== */
+        @media print {
+            body { background: transparent; }
+            .a4-page { margin: 0; box-shadow: none; page-break-after: always; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            @page { size: A4; margin: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ============================================================
+     PAGE 1 : CONNEXION
+     ============================================================ -->
+<div class="a4-page">
+    <div class="page-label">TranspoBot — Interface Mobile</div>
+    <div class="phone-frame">
+        <div class="phone-screen">
+            <div class="phone-notch"></div>
+            <div class="status-bar">
+                <span>09:41</span>
+                <div class="icons">
+                    <i class="fa-solid fa-wifi" style="font-size:10px"></i>
+                    <i class="fa-solid fa-battery-three-quarters" style="font-size:10px"></i>
+                </div>
+            </div>
+            <!-- LOGIN CONTENT -->
+            <div class="s-login">
+                <div class="login-glass">
+                    <div class="logo-icon"><i class="fa-solid fa-route"></i></div>
+                    <h2>Transpo<span style="color:#3b82f6">Bot</span></h2>
+                    <p>Portail d'Accès Sécurisé</p>
+                    <div class="field-grp">
+                        <label>Email Professionnel</label>
+                        <div class="inp">nom@ucad.edu.sn</div>
+                    </div>
+                    <div class="field-grp">
+                        <label>Mot de passe</label>
+                        <div class="inp" style="letter-spacing:4px; color:rgba(255,255,255,0.7);">••••••••</div>
+                    </div>
+                    <button class="btn-login">
+                        <i class="fa-solid fa-right-to-bracket"></i> Connexion
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="page-num">01 / 08</div>
+</div>
+
+<!-- ============================================================
+     PAGE 2 : TABLEAU DE BORD
+     ============================================================ -->
+<div class="a4-page">
+    <div class="page-label">TranspoBot — Interface Mobile</div>
+    <div class="phone-frame">
+        <div class="phone-screen">
+            <div class="phone-notch"></div>
+            <div class="status-bar">
+                <span>09:41</span>
+                <div class="icons">
+                    <i class="fa-solid fa-wifi" style="font-size:10px"></i>
+                    <i class="fa-solid fa-battery-three-quarters" style="font-size:10px"></i>
+                </div>
+            </div>
+            <div class="screen s-dash">
+                <div class="topbar">
+                    <div>
+                        <div style="font-size:9px; color:var(--text-muted);">Bonjour 👋</div>
+                        <h1>Transpo<span>Bot</span></h1>
+                    </div>
+                    <div class="avatar-sm">AD</div>
+                </div>
+                <div class="scrollable">
+                    <div class="dash-content">
+                        <div class="kpi-row">
+                            <div class="kpi-card" style="border-color:var(--primary)">
+                                <div class="kpi-label"><i class="fa-solid fa-coins"></i> Recette semaine</div>
+                                <div class="kpi-val">2.4M</div>
+                                <div class="kpi-sub" style="color:var(--success)">+12% cette semaine</div>
+                            </div>
+                            <div class="kpi-card" style="border-color:var(--success)">
+                                <div class="kpi-label"><i class="fa-solid fa-bus"></i> Bus en route</div>
+                                <div class="kpi-val">42 / 50</div>
+                                <div class="kpi-sub">8 au dépôt</div>
+                            </div>
+                            <div class="kpi-card" style="border-color:var(--warning)">
+                                <div class="kpi-label"><i class="fa-solid fa-users"></i> Chauffeurs dispo</div>
+                                <div class="kpi-val">18 / 25</div>
+                                <div class="kpi-sub" style="color:var(--warning)">7 en mission</div>
+                            </div>
+                            <div class="kpi-card" style="border-color:var(--danger)">
+                                <div class="kpi-label"><i class="fa-solid fa-triangle-exclamation"></i> Incidents</div>
+                                <div class="kpi-val">3</div>
+                                <div class="kpi-sub" style="color:var(--danger)">Ouverts</div>
+                            </div>
+                        </div>
+                        <!-- Chatbot -->
+                        <div class="section-title">Assistant IA</div>
+                        <div class="chatbot-box">
+                            <div class="chatbot-header">
+                                <div class="bot-icon"><i class="fa-solid fa-robot"></i></div>
+                                <div>
+                                    <span>TranspoBot IA</span>
+                                    <small><i class="fa-solid fa-circle"></i> En ligne — Llama 3.1</small>
+                                </div>
+                            </div>
+                            <div style="display:flex; flex-direction:column; gap:4px;">
+                                <div class="bubble user">Recette de la ligne 12 cette semaine ?</div>
+                                <div class="bubble bot">
+                                    Requête : <code>SUM(recette) WHERE ligne='L12'</code><br>
+                                    La recette est de <strong>540 800 FCFA</strong>.
+                                </div>
+                            </div>
+                            <div class="chat-input-row">
+                                <input placeholder="Posez votre question...">
+                                <button><i class="fa-solid fa-paper-plane"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- BOTTOM NAV -->
+                <div class="bottom-bar">
+                    <a href="#" class="active"><i class="fa-solid fa-chart-pie"></i>Dashboard</a>
+                    <a href="#"><i class="fa-solid fa-bus"></i>Flotte</a>
+                    <a href="#"><i class="fa-solid fa-users"></i>Chauffeurs</a>
+                    <a href="#"><i class="fa-solid fa-route"></i>Lignes</a>
+                    <a href="#"><i class="fa-solid fa-ellipsis"></i>Plus</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="page-num">02 / 08</div>
+</div>
+
+<!-- ============================================================
+     PAGE 3 : CHAUFFEURS
+     ============================================================ -->
+<div class="a4-page">
+    <div class="page-label">TranspoBot — Interface Mobile</div>
+    <div class="phone-frame">
+        <div class="phone-screen">
+            <div class="phone-notch"></div>
+            <div class="status-bar">
+                <span>09:41</span>
+                <div class="icons"><i class="fa-solid fa-wifi" style="font-size:10px"></i><i class="fa-solid fa-battery-three-quarters" style="font-size:10px"></i></div>
+            </div>
+            <div class="screen s-staff">
+                <div class="view-header">
+                    <h2><i class="fa-solid fa-users" style="color:var(--primary)"></i> Chauffeurs</h2>
+                    <button class="btn-add"><i class="fa-solid fa-plus"></i> Nouveau</button>
+                </div>
+                <div class="scrollable">
+                    <div class="staff-list">
+                        <div class="staff-card">
+                            <div class="staff-avatar" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8)">DM</div>
+                            <div class="staff-info">
+                                <div class="name">Diop Mamadou</div>
+                                <div class="permis">Permis: P-89234 · Catégorie D</div>
+                                <span class="badge success" style="margin-top:4px"><i class="fa-solid fa-circle"></i> En Service</span>
+                            </div>
+                            <div class="staff-actions">
+                                <div class="icon-btn"><i class="fa-solid fa-pen"></i></div>
+                                <div class="icon-btn"><i class="fa-solid fa-ellipsis-v"></i></div>
+                            </div>
+                        </div>
+                        <div class="staff-card">
+                            <div class="staff-avatar" style="background:linear-gradient(135deg,#f59e0b,#d97706)">FO</div>
+                            <div class="staff-info">
+                                <div class="name">Fall Ousmane</div>
+                                <div class="permis">Permis: P-11204 · Catégorie D</div>
+                                <span class="badge danger" style="margin-top:4px"><i class="fa-solid fa-circle"></i> Sur la route</span>
+                            </div>
+                            <div class="staff-actions">
+                                <div class="icon-btn"><i class="fa-solid fa-pen"></i></div>
+                                <div class="icon-btn"><i class="fa-solid fa-ellipsis-v"></i></div>
+                            </div>
+                        </div>
+                        <div class="staff-card">
+                            <div class="staff-avatar" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9)">NC</div>
+                            <div class="staff-info">
+                                <div class="name">Ndiaye Cheikh</div>
+                                <div class="permis">Permis: P-65732 · Catégorie D</div>
+                                <span class="badge warning" style="margin-top:4px">🏖️ En Congé</span>
+                            </div>
+                            <div class="staff-actions">
+                                <div class="icon-btn"><i class="fa-solid fa-pen"></i></div>
+                                <div class="icon-btn"><i class="fa-solid fa-ellipsis-v"></i></div>
+                            </div>
+                        </div>
+                        <div class="staff-card">
+                            <div class="staff-avatar" style="background:linear-gradient(135deg,#10b981,#059669)">GA</div>
+                            <div class="staff-info">
+                                <div class="name">Gueye Awa</div>
+                                <div class="permis">Permis: P-22345 · Catégorie D</div>
+                                <span class="badge success" style="margin-top:4px"><i class="fa-solid fa-circle"></i> En Service</span>
+                            </div>
+                            <div class="staff-actions">
+                                <div class="icon-btn"><i class="fa-solid fa-pen"></i></div>
+                                <div class="icon-btn"><i class="fa-solid fa-ellipsis-v"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bottom-bar">
+                    <a href="#"><i class="fa-solid fa-chart-pie"></i>Dashboard</a>
+                    <a href="#"><i class="fa-solid fa-bus"></i>Flotte</a>
+                    <a href="#" class="active"><i class="fa-solid fa-users"></i>Chauffeurs</a>
+                    <a href="#"><i class="fa-solid fa-route"></i>Lignes</a>
+                    <a href="#"><i class="fa-solid fa-ellipsis"></i>Plus</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="page-num">03 / 08</div>
+</div>
+
+<!-- ============================================================
+     PAGE 4 : FLOTTE & MAINTENANCE
+     ============================================================ -->
+<div class="a4-page">
+    <div class="page-label">TranspoBot — Interface Mobile</div>
+    <div class="phone-frame">
+        <div class="phone-screen">
+            <div class="phone-notch"></div>
+            <div class="status-bar">
+                <span>09:41</span>
+                <div class="icons"><i class="fa-solid fa-wifi" style="font-size:10px"></i><i class="fa-solid fa-battery-three-quarters" style="font-size:10px"></i></div>
+            </div>
+            <div class="screen">
+                <div class="view-header">
+                    <h2><i class="fa-solid fa-bus" style="color:var(--primary)"></i> Flotte</h2>
+                    <button class="btn-add"><i class="fa-solid fa-plus"></i> Nouveau Bus</button>
+                </div>
+                <div class="scrollable">
+                    <div class="fleet-list">
+                        <div class="fleet-card">
+                            <div class="fleet-card-top">
+                                <div>
+                                    <div class="fleet-name">Tata Motors · 64 places</div>
+                                    <div class="fleet-plate">DK-4523-A</div>
+                                </div>
+                                <span class="badge success">En route</span>
+                            </div>
+                            <div class="km-labels"><span>Km: 125 400</span><span>Seuil: 130 000</span></div>
+                            <div class="km-bar"><div class="km-bar-fill" style="width:96%; background:var(--warning)"></div></div>
+                            <div style="font-size:9px; color:var(--warning)">⚠️ Maintenance imminente — 4 600 km restants</div>
+                        </div>
+                        <div class="fleet-card">
+                            <div class="fleet-card-top">
+                                <div>
+                                    <div class="fleet-name">Volvo 9900 · 52 places</div>
+                                    <div class="fleet-plate">DK-1189-C</div>
+                                </div>
+                                <span class="badge danger">À Réviser</span>
+                            </div>
+                            <div class="km-labels"><span>Km: 141 200</span><span>Seuil: 140 000</span></div>
+                            <div class="km-bar"><div class="km-bar-fill" style="width:100%; background:var(--danger)"></div></div>
+                            <div style="font-size:9px; color:var(--danger)">🔴 Seuil dépassé — Atelier requis automatiquement</div>
+                        </div>
+                        <div class="fleet-card">
+                            <div class="fleet-card-top">
+                                <div>
+                                    <div class="fleet-name">Mercedes Citaro · 80 places</div>
+                                    <div class="fleet-plate">TH-9021-B</div>
+                                </div>
+                                <span class="badge success">En route</span>
+                            </div>
+                            <div class="km-labels"><span>Km: 45 000</span><span>Seuil: 80 000</span></div>
+                            <div class="km-bar"><div class="km-bar-fill" style="width:56%; background:var(--success)"></div></div>
+                            <div style="font-size:9px; color:var(--success)">✅ État optimal</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bottom-bar">
+                    <a href="#"><i class="fa-solid fa-chart-pie"></i>Dashboard</a>
+                    <a href="#" class="active"><i class="fa-solid fa-bus"></i>Flotte</a>
+                    <a href="#"><i class="fa-solid fa-users"></i>Chauffeurs</a>
+                    <a href="#"><i class="fa-solid fa-route"></i>Lignes</a>
+                    <a href="#"><i class="fa-solid fa-ellipsis"></i>Plus</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="page-num">04 / 08</div>
+</div>
+
+<!-- ============================================================
+     PAGE 5 : LIGNES & GPS
+     ============================================================ -->
+<div class="a4-page">
+    <div class="page-label">TranspoBot — Interface Mobile</div>
+    <div class="phone-frame">
+        <div class="phone-screen">
+            <div class="phone-notch"></div>
+            <div class="status-bar">
+                <span>09:41</span>
+                <div class="icons"><i class="fa-solid fa-wifi" style="font-size:10px"></i><i class="fa-solid fa-battery-three-quarters" style="font-size:10px"></i></div>
+            </div>
+            <div class="screen s-lignes">
+                <div class="view-header">
+                    <h2><i class="fa-solid fa-route" style="color:var(--secondary)"></i> Nouvelle Ligne</h2>
+                </div>
+                <div class="scrollable">
+                    <!-- MAP -->
+                    <div class="map-container">
+                        <div class="map-bg"></div>
+                        <div class="map-overlay"></div>
+                        <div class="map-pin A">A</div>
+                        <div class="map-route"></div>
+                        <div class="map-pin B">B</div>
+                        <div style="position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:9px;color:rgba(0,0,0,0.6);background:rgba(255,255,255,0.8);padding:3px 8px;border-radius:8px;white-space:nowrap">
+                            <i class="fa-solid fa-hand-pointer"></i> Tapez A → puis B pour tracer la route
+                        </div>
+                    </div>
+                    <div class="ligne-form">
+                        <div class="form-row" style="margin-bottom:10px;">
+                            <div>
+                                <div class="fld">
+                                    <label>Code ligne</label>
+                                    <div class="val">L12</div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="fld">
+                                    <label>Nom ligne</label>
+                                    <div class="val" style="font-size:10px">Dakar — Thiès</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row" style="margin-bottom:10px;">
+                            <div class="fld">
+                                <label>Ville départ (Auto)</label>
+                                <div class="val" style="color:var(--text-muted)">Dakar <span class="auto-badge">GPS</span></div>
+                            </div>
+                            <div class="fld">
+                                <label>Ville arrivée (Auto)</label>
+                                <div class="val" style="color:var(--text-muted)">Thiès <span class="auto-badge">GPS</span></div>
+                            </div>
+                        </div>
+                        <div class="form-row" style="margin-bottom:10px;">
+                            <div class="fld">
+                                <label>Distance (Auto-OSRM)</label>
+                                <div class="val" style="color:var(--success); font-weight:700">71.4 km <span class="auto-badge">OSRM</span></div>
+                            </div>
+                            <div class="fld">
+                                <label>Durée estimée</label>
+                                <div class="val" style="color:var(--success); font-weight:700">85 min</div>
+                            </div>
+                        </div>
+                        <div class="fld">
+                            <label>Tarif (FCFA)</label>
+                            <div class="val">2 500 FCFA</div>
+                        </div>
+                        <button style="width:100%;background:var(--primary);color:white;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:600;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px">
+                            <i class="fa-solid fa-save"></i> Créer la Ligne
+                        </button>
+                    </div>
+                </div>
+                <div class="bottom-bar">
+                    <a href="#"><i class="fa-solid fa-chart-pie"></i>Dashboard</a>
+                    <a href="#"><i class="fa-solid fa-bus"></i>Flotte</a>
+                    <a href="#"><i class="fa-solid fa-users"></i>Chauffeurs</a>
+                    <a href="#" class="active"><i class="fa-solid fa-route"></i>Lignes</a>
+                    <a href="#"><i class="fa-solid fa-ellipsis"></i>Plus</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="page-num">05 / 08</div>
+</div>
+
+<!-- ============================================================
+     PAGE 6 : TRAJETS
+     ============================================================ -->
+<div class="a4-page">
+    <div class="page-label">TranspoBot — Interface Mobile</div>
+    <div class="phone-frame">
+        <div class="phone-screen">
+            <div class="phone-notch"></div>
+            <div class="status-bar">
+                <span>09:41</span>
+                <div class="icons"><i class="fa-solid fa-wifi" style="font-size:10px"></i><i class="fa-solid fa-battery-three-quarters" style="font-size:10px"></i></div>
+            </div>
+            <div class="screen">
+                <div class="view-header">
+                    <h2><i class="fa-solid fa-clock-rotate-left" style="color:var(--warning)"></i> Trajets</h2>
+                    <button class="btn-add"><i class="fa-solid fa-plus"></i> Planifier</button>
+                </div>
+                <div class="scrollable">
+                    <div class="trajets-list">
+                        <div class="trajet-card">
+                            <div class="trajet-top">
+                                <div class="trajet-number">Trajet #104</div>
+                                <span class="badge success">En cours</span>
+                            </div>
+                            <div class="trajet-route">
+                                <i class="fa-solid fa-circle-dot" style="color:var(--success)"></i> Dakar
+                                <i class="fa-solid fa-arrow-right" style="font-size:8px"></i>
+                                <i class="fa-regular fa-circle" style="color:var(--danger)"></i> Thiès
+                            </div>
+                            <div class="trajet-meta">
+                                <span><i class="fa-solid fa-user"></i> Diop Mamadou</span>
+                                <span><i class="fa-solid fa-bus"></i> DK-4523-A</span>
+                                <span><i class="fa-solid fa-clock"></i> 14h00</span>
+                            </div>
+                            <div class="action-row">
+                                <button class="action-btn stop"><i class="fa-solid fa-flag-checkered"></i> Terminer</button>
+                                <button class="action-btn edit"><i class="fa-solid fa-pen"></i> Modifier</button>
+                            </div>
+                        </div>
+                        <div class="trajet-card">
+                            <div class="trajet-top">
+                                <div class="trajet-number">Trajet #105</div>
+                                <span class="badge info">Planifié</span>
+                            </div>
+                            <div class="trajet-route">
+                                <i class="fa-solid fa-circle-dot" style="color:var(--success)"></i> Rufisque
+                                <i class="fa-solid fa-arrow-right" style="font-size:8px"></i>
+                                <i class="fa-regular fa-circle" style="color:var(--danger)"></i> Mbour
+                            </div>
+                            <div class="trajet-meta">
+                                <span><i class="fa-solid fa-user"></i> Gueye Awa</span>
+                                <span><i class="fa-solid fa-bus"></i> TH-9021-B</span>
+                                <span><i class="fa-solid fa-clock"></i> 15h30</span>
+                            </div>
+                            <div class="action-row">
+                                <button class="action-btn start"><i class="fa-solid fa-play"></i> Démarrer</button>
+                                <button class="action-btn edit"><i class="fa-solid fa-pen"></i> Modifier</button>
+                                <button class="action-btn stop"><i class="fa-solid fa-ban"></i> Annuler</button>
+                            </div>
+                        </div>
+                        <!-- Anti-collision warning -->
+                        <div style="background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.3); border-radius:12px; padding:12px;">
+                            <div style="font-size:11px; font-weight:700; color:var(--danger); margin-bottom:4px"><i class="fa-solid fa-ban"></i> Anti-Double Booking</div>
+                            <div style="font-size:9.5px; color:var(--text-muted); line-height:1.5">Le bus DK-1189-C est déjà réquisitionné jusqu'à 14h40. Créneau 14h00 refusé automatiquement.</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bottom-bar">
+                    <a href="#"><i class="fa-solid fa-chart-pie"></i>Dashboard</a>
+                    <a href="#"><i class="fa-solid fa-bus"></i>Flotte</a>
+                    <a href="#"><i class="fa-solid fa-users"></i>Chauffeurs</a>
+                    <a href="#"><i class="fa-solid fa-route"></i>Lignes</a>
+                    <a href="#" class="active"><i class="fa-solid fa-ellipsis"></i>Plus</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="page-num">06 / 08</div>
+</div>
+
+<!-- ============================================================
+     PAGE 7 : INCIDENTS
+     ============================================================ -->
+<div class="a4-page">
+    <div class="page-label">TranspoBot — Interface Mobile</div>
+    <div class="phone-frame">
+        <div class="phone-screen">
+            <div class="phone-notch"></div>
+            <div class="status-bar">
+                <span>09:41</span>
+                <div class="icons"><i class="fa-solid fa-wifi" style="font-size:10px"></i><i class="fa-solid fa-battery-three-quarters" style="font-size:10px"></i></div>
+            </div>
+            <div class="screen">
+                <div class="view-header">
+                    <h2><i class="fa-solid fa-triangle-exclamation" style="color:var(--danger)"></i> Incidents</h2>
+                    <button class="btn-add" style="background:var(--danger)"><i class="fa-solid fa-plus"></i> Signaler</button>
+                </div>
+                <div class="scrollable">
+                    <div class="incidents-list">
+                        <div class="incident-card">
+                            <div class="inc-header">
+                                <div class="inc-type"><i class="fa-solid fa-fire-flame-curved"></i> Panne Moteur</div>
+                                <span class="badge danger">Ouvert</span>
+                            </div>
+                            <div class="inc-desc">Bus DK-4523-A surchauffe sur la Route Nationale 1. Trajet #104 suspendu automatiquement.</div>
+                            <div class="inc-meta">
+                                <span><i class="fa-solid fa-user"></i> Diop Mamadou</span>
+                                <span><i class="fa-solid fa-clock"></i> 14:32</span>
+                            </div>
+                            <div class="action-row" style="margin-top:8px">
+                                <button class="action-btn edit"><i class="fa-solid fa-truck-medical"></i> Dépannage</button>
+                                <button class="action-btn start"><i class="fa-solid fa-check"></i> Résoudre</button>
+                            </div>
+                        </div>
+                        <div class="incident-card resolved">
+                            <div class="inc-header">
+                                <div class="inc-type"><i class="fa-solid fa-car-burst"></i> Accident Mineur</div>
+                                <span class="badge success">Résolu</span>
+                            </div>
+                            <div class="inc-desc">Accrochage léger en gare. Aucun blessé. Bus remplacé par TH-9021-B.</div>
+                            <div class="inc-meta">
+                                <span><i class="fa-solid fa-user"></i> Fall Ousmane</span>
+                                <span><i class="fa-solid fa-clock"></i> Hier 09:15</span>
+                            </div>
+                        </div>
+                        <div class="incident-card">
+                            <div class="inc-header">
+                                <div class="inc-type"><i class="fa-solid fa-hourglass-half"></i> Retard Important</div>
+                                <span class="badge warning">En cours</span>
+                            </div>
+                            <div class="inc-desc">Embouteillage sur la VDN. Retard estimé : 45 minutes sur le Trajet #103.</div>
+                            <div class="inc-meta">
+                                <span><i class="fa-solid fa-user"></i> Ndiaye Cheikh</span>
+                                <span><i class="fa-solid fa-clock"></i> 13:50</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bottom-bar">
+                    <a href="#"><i class="fa-solid fa-chart-pie"></i>Dashboard</a>
+                    <a href="#"><i class="fa-solid fa-bus"></i>Flotte</a>
+                    <a href="#"><i class="fa-solid fa-users"></i>Chauffeurs</a>
+                    <a href="#"><i class="fa-solid fa-route"></i>Lignes</a>
+                    <a href="#" class="active"><i class="fa-solid fa-ellipsis"></i>Plus</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="page-num">07 / 08</div>
+</div>
+
+<!-- ============================================================
+     PAGE 8 : MAINTENANCES
+     ============================================================ -->
+<div class="a4-page">
+    <div class="page-label">TranspoBot — Interface Mobile</div>
+    <div class="phone-frame">
+        <div class="phone-screen">
+            <div class="phone-notch"></div>
+            <div class="status-bar">
+                <span>09:41</span>
+                <div class="icons"><i class="fa-solid fa-wifi" style="font-size:10px"></i><i class="fa-solid fa-battery-three-quarters" style="font-size:10px"></i></div>
+            </div>
+            <div class="screen">
+                <div class="view-header">
+                    <h2><i class="fa-solid fa-wrench" style="color:var(--warning)"></i> Maintenances</h2>
+                    <button class="btn-add" style="background:var(--warning)"><i class="fa-solid fa-plus"></i> Créer</button>
+                </div>
+                <div class="scrollable">
+                    <div class="maint-list">
+                        <div class="maint-card">
+                            <div class="maint-top">
+                                <div>
+                                    <div class="maint-title">Révision Périodique</div>
+                                    <div class="maint-sub">Bus DK-1189-C (Volvo 9900)</div>
+                                </div>
+                                <span class="badge danger">Urgence</span>
+                            </div>
+                            <div style="font-size:9.5px; color:var(--text-muted)">Déclenché automatiquement — Seuil 140 000 km atteint</div>
+                            <div style="font-size:9.5px; color:var(--text-muted); margin-top:3px"><i class="fa-solid fa-calendar"></i> Début: 04/04/2026</div>
+                            <div class="maint-actions">
+                                <button class="action-btn start" style="flex:1"><i class="fa-solid fa-flag-checkered"></i> Clôturer</button>
+                                <button class="action-btn stop" style="flex:1"><i class="fa-solid fa-trash"></i> Supprimer</button>
+                            </div>
+                        </div>
+                        <div class="maint-card">
+                            <div class="maint-top">
+                                <div>
+                                    <div class="maint-title">Vidange + Filtres</div>
+                                    <div class="maint-sub">Bus TH-9021-B (Mercedes)</div>
+                                </div>
+                                <span class="badge warning">Planifiée</span>
+                            </div>
+                            <div style="font-size:9.5px; color:var(--text-muted)">Maintenance préventive planifiée par l'atelier</div>
+                            <div style="font-size:9.5px; color:var(--text-muted); margin-top:3px"><i class="fa-solid fa-calendar"></i> Début: 10/04/2026</div>
+                            <div class="maint-actions">
+                                <button class="action-btn start" style="flex:1"><i class="fa-solid fa-flag-checkered"></i> Clôturer</button>
+                                <button class="action-btn stop" style="flex:1"><i class="fa-solid fa-trash"></i> Supprimer</button>
+                            </div>
+                        </div>
+                        <div class="maint-card">
+                            <div class="maint-top">
+                                <div>
+                                    <div class="maint-title">Contrôle Freins</div>
+                                    <div class="maint-sub">Bus DK-4523-A (Tata)</div>
+                                </div>
+                                <span class="badge success">Terminée</span>
+                            </div>
+                            <div style="font-size:9.5px; color:var(--text-muted)">Contrôle technique annuel réussi. Bus remis en service.</div>
+                            <div style="font-size:9.5px; color:var(--success); margin-top:3px; font-weight:600"><i class="fa-solid fa-check"></i> Clôturé le 01/04/2026</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bottom-bar">
+                    <a href="#"><i class="fa-solid fa-chart-pie"></i>Dashboard</a>
+                    <a href="#"><i class="fa-solid fa-bus"></i>Flotte</a>
+                    <a href="#"><i class="fa-solid fa-users"></i>Chauffeurs</a>
+                    <a href="#"><i class="fa-solid fa-route"></i>Lignes</a>
+                    <a href="#" class="active"><i class="fa-solid fa-ellipsis"></i>Plus</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="page-num">08 / 08</div>
+</div>
+
+</body>
+</html>
